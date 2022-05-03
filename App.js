@@ -17,6 +17,7 @@ import {
   Dimensions,
   Text,
   Animated,
+  Switch,
   Easing,
   ActivityIndicator,
   useColorScheme,
@@ -61,11 +62,17 @@ const App = () => {
       method: 'GET',
       redirect: 'follow'
     };
-    
-    fetch("https://api.mocklets.com/p68348/success_case", requestOptions)
+    if (isEnabled){
+      fetch("https://api.mocklets.com/p68348/success_case", requestOptions)
       .then(response => response.json())
       .then(result => {console.log(result);animate();animate2();setResult(result)})
       .catch(error => console.log('error', error));
+    }else{
+      fetch("https://api.mocklets.com/p68348/failure_case", requestOptions)
+      .then(response => response.json())
+      .then(result => {console.log(result);animate();animate2();setResult(result)})
+      .catch(error => console.log('error', error));
+    }    
   })
   const trans = {
     transform:[
@@ -77,15 +84,32 @@ const App = () => {
         {translateY: animation2}
     ]
   }
+  const [isEnabled, setIsEnabled] = useState(true);
+  const toggleSwitch = () => setIsEnabled(previousState => !previousState);
   LogBox.ignoreAllLogs()
   return (
     <SafeAreaView style={styles.backgroundStyle}>
       <StatusBar backgroundColor={'#1c2121'} />
+      <View style={styles.upperToggleView}>
+        <Text style={{color:'#f4f3f4',fontFamily:'Montserrat-SemiBold',fontSize:20}}>{isEnabled?'Success mode':'Failure Mode'}</Text>
+        <Switch        
+        trackColor={{ false: "#767577", true: "#57b5a8" }}
+        thumbColor={"#f4f3f4"}
+        ios_backgroundColor="#3e3e3e"
+        onValueChange={toggleSwitch}
+        value={isEnabled}
+      />
+      </View>
+      
       <View style={styles.card} >
+        {!isEnabled && result?
+        <View style={styles.errorContainer}>
+          <Image source={require('./Assets/fail.png')} style={[styles.errorImage]}/>
+        </View>  :null}
         {!active?<DragButton setActive={setActive} callAPI={callAPI} />:null}
         {result?
         <Animated.View style={[trans]}>
-          <Text style={styles.result}>success</Text>
+          <Text style={styles.result}>{isEnabled? 'success' : 'failure'}</Text>
         </Animated.View>:null}
       </View>
       {!result || !active?<View style={styles.arrowContainer}>
@@ -107,18 +131,25 @@ const styles = StyleSheet.create({
   },
   card: {
     width: width * 0.90,
-    height: height * 0.45,
+    height: height * 0.35,
     backgroundColor: 'white',
     borderRadius: 15,
     marginTop: height*0.05,
     alignSelf: 'center',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    zIndex:0
+    zIndex:0,
+    
   },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  errorContainer:{
+    width:width*0.31,
+    height:width*0.31,
+    position:'absolute',
+    bottom:'40%'
+  },
+  errorImage:{
+    width:'100%',
+    height:'100%',
   },
   result:{
     color:'black',
@@ -131,6 +162,14 @@ const styles = StyleSheet.create({
     marginTop:width*0.2,
     alignItems:'center'
   },
+  upperToggleView:{
+    flexDirection:'row',
+    marginTop:'5%',
+    alignItems:'center',
+    width:width*0.95,
+    justifyContent:'center',
+     alignSelf:'center' 
+    },
   loaderContainer:{
     width:width*0.25,
     height:width*0.25,
